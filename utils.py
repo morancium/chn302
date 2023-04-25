@@ -45,7 +45,7 @@ def Ki(comp,T,P):
 def Hji(comp,T):
     c1,c2,c3=comp
     T+=273.0
-    return c1*T+c2*T**2+c3*T**3
+    return (c1*T+c2*T**2+c3*T**3)/1e6
 
 def my_function(x):
     return x**2-1

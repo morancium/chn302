@@ -217,15 +217,18 @@ def step7():
     hB=0
     HF=0
     for i in range (nc):
-        summ1+=((Hji(data["components"][component[i]]["Cp_liquid"],Tj[1])/1000+(data["components"][component[i]]["Hv"])))*xji[0][i]
-        h0+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[0])/1000)*xji[0][i]
-        summ2+=((Hji(data["components"][component[i]]["Cp_liquid"],Tj[1])/1000+(data["components"][component[i]]["Hv"])))*di_corr[i]/Distilate
+        # Qc
+        summ1+=((Hji(data["components"][component[i]]["Cp_liquid"],Tj[1])+(data["components"][component[i]]["Hv"])))*xji[0][i]
+        h0+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[0]))*xji[0][i]
+        summ2+=((Hji(data["components"][component[i]]["Cp_liquid"],Tj[1])+(data["components"][component[i]]["Hv"])))*di_corr[i]/Distilate
         if Type:
-            HD+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[0])/1000)*di_corr[i]/Distilate
+            HD+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[0]))*di_corr[i]/Distilate
         else:
-            HD+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[0])/1000+(data["components"][component[i]]["Hv"]))*di_corr[i]/Distilate
-        hB+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[-1])*xji[-1][i]/1000
-        HF+=yi[i]*(Hji(data["components"][component[i]]["Cp_liquid"],Tj[0])/1000+data["components"][component[i]]["Hv"])
+            HD+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[0])+(data["components"][component[i]]["Hv"]))*di_corr[i]/Distilate
+        hB+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[-1])*xji[-1][i]
+        HF+=yi[i]*(Hji(data["components"][component[i]]["Cp_liquid"],Feed_temperature)+data["components"][component[i]]["Hv"])
+        
+        # print(Hji(data["components"][component[i]]["Cp_liquid"],Tj[1]))
         
     Qc=Reflux*Distilate*(summ1-h0)+Distilate*(summ2-HD)
     QR=(feed_flowrate-Distilate)*hB+Distilate*HD+Qc-feed_flowrate*HF
@@ -235,30 +238,30 @@ def step7():
         summ_denom=0
         hj=0
         for i in range (nc):
-            summ_Num+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[j+1])/1000+(data["components"][component[i]]["Hv"]))*di_corr[i]/Distilate
-            summ_denom+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[j+1])/1000+(data["components"][component[i]]["Hv"]))*xji[j][i]
-            hj+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[j])*xji[j][i]/1000
-        Vj_new[j+1]=(Distilate*(HD-summ_Num)+Qc)/summ_denom-hj[j]+Distilate
+            summ_Num+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[j+1])+(data["components"][component[i]]["Hv"]))*di_corr[i]/Distilate
+            summ_denom+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[j+1])+(data["components"][component[i]]["Hv"]))*xji[j][i]
+            hj+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[j])*xji[j][i]
+        Vj_new[j+1]=(Distilate*(HD-summ_Num)+Qc)/(summ_denom-hj)+Distilate
         
     summ_feedtray_d=0
     summ_feedtray_f=0
-    summ_feedtray_f_liq=0
+    summ_feedtray_f_denom=0
     hf_1=0
     for i in range (nc):
-        summ_feedtray_d+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[feed_location])/1000+(data["components"][component[i]]["Hv"]))*di_corr[i]/Distilate
-        summ_feedtray_f+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[feed_location])/1000+(data["components"][component[i]]["Hv"]))*yi[i]
-        summ_feedtray_f_liq+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[feed_location])/1000+(data["components"][component[i]]["Hv"]))*xji[feed_location-1][i]
-        hf_1+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[feed_location-1])*xji[feed_location-1][i]/1000
-    Vj_new[feed_location]=(Distilate*(HD-summ_feedtray_d)+Vf*(summ_feedtray_f-HF)+Qc)/(summ_feedtray_f_liq-hf_1)+Distilate-Vf
+        summ_feedtray_d+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[feed_location])+(data["components"][component[i]]["Hv"]))*di_corr[i]/Distilate
+        summ_feedtray_f+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[feed_location])+(data["components"][component[i]]["Hv"]))*yi[i]
+        summ_feedtray_f_denom+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[feed_location])+(data["components"][component[i]]["Hv"]))*xji[feed_location-1][i]
+        hf_1+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[feed_location-1])*xji[feed_location-1][i]
+    Vj_new[feed_location]=(Distilate*(HD-summ_feedtray_d)+Vf*(summ_feedtray_f-HF)+Qc)/(summ_feedtray_f_denom-hf_1)+Distilate-Vf
         
     for j in range(feed_location,No_trays+1):
         summ_Num1=0
         summ_denom1=0
         Hj=0
         for i in range(nc):
-            summ_Num1+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[j])*xji[-1][i]/1000
-            summ_denom1+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[j])*yji[j+1][i]/1000
-            Hj+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[j+1])/1000+(data["components"][component[i]]["Hv"]))*yji[j+1][i]
+            summ_Num1+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[j])*xji[-1][i]
+            summ_denom1+=Hji(data["components"][component[i]]["Cp_liquid"],Tj[j])*yji[j+1][i]
+            Hj+=(Hji(data["components"][component[i]]["Cp_liquid"],Tj[j+1])+(data["components"][component[i]]["Hv"]))*yji[j+1][i]
         Vj_new[j+1]=((feed_flowrate-Distilate)*(summ_Num1-hB)+QR)/(Hj-summ_denom1)
         
     return Vj_new
@@ -271,12 +274,12 @@ Tj_new=step6()
 tolT = np.linalg.norm(Tj-Tj_new)
 tolV = np.linalg.norm(Vj-Vj_new)
 while (tolT>1e-6 and tolV>1e-6 ):
-    # tolT = np.linalg.norm(Tj-Tj_new)
+    tolT = np.linalg.norm(Tj-Tj_new)
     tolV = np.linalg.norm(Vj-Vj_new)
     Tj=Tj_new
     Vj=Vj_new
     Vj_new=step7()
-    # Tj_new=step6()
-    print(Vj_new)
-    # print(Tj_new)
+    Tj_new=step6()
+print(Vj_new)
+print(Tj_new)
 # main()
